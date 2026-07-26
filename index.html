@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ديوان — اجعل الذكاء الاصطناعي ينطق العربية بشكل صحيح</title>
+<!--
+  ══════════════════════════════════════════════════════════════════════════════
+  ⚙️  إعدادان اثنان قبل النشر — لا شيء غيرهما:
+      1) BUY_URL   : رابط منتجك على Gumroad/Payhip. يُطبَّق تلقائيًا على كل أزرار الشراء.
+      2) AUDIO_BASE: مجلد ملفات الصوت. اتركه كما هو للاستضافة الذاتية، أو ضع رابطًا
+                     مطلقًا (CDN / Gumroad public-files) إن رفعت الصفحة وحدها.
+  ══════════════════════════════════════════════════════════════════════════════
+-->
+<script>
+  window.DIWAN = {
+    BUY_URL:    "https://abdulmalik86.gumroad.com/l/DiwanVoiceKit",    /* رابط المنتج المعتمد */
+    AUDIO_BASE: "marketing-assets/"                        /* ← أو رابط مطلق ينتهي بـ / */
+  };
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          gold: { DEFAULT: '#c4a260', light: '#d8bd8a', dark: '#a3814a' },
+          ink: { DEFAULT: '#1a1816', soft: '#242220' },
+        },
+        fontFamily: {
+          arabic: ['"Noto Naskh Arabic"', '"Amiri"', 'serif'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;500;700&display=swap');
+
+  * { font-family: 'Noto Naskh Arabic', 'Amiri', serif; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: #faf7f2;
+    color: #1a1816;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  html.dark body {
+    background: #17150f;
+    color: #ede4d3;
+  }
+
+  .glow-title {
+    text-shadow: 0 0 40px rgba(196,162,96,0.35);
+  }
+
+  .card {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(196,162,96,0.25);
+    backdrop-filter: blur(6px);
+  }
+  html.dark .card {
+    background: rgba(36,34,32,0.6);
+    border: 1px solid rgba(196,162,96,0.2);
+  }
+
+  .fade-up {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .buy-btn {
+    background: linear-gradient(135deg, #c4a260, #a3814a);
+    box-shadow: 0 8px 24px rgba(196,162,96,0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .buy-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(196,162,96,0.5);
+  }
+  .buy-btn:active { transform: translateY(0) scale(0.99); }
+
+  .cover-carousel {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cover-carousel > * { scroll-snap-align: center; }
+  .cover-carousel::-webkit-scrollbar { height: 6px; }
+  .cover-carousel::-webkit-scrollbar-thumb { background: rgba(196,162,96,0.4); border-radius: 999px; }
+
+  .divider-orn::before {
+    content: '';
+    display: block;
+    width: 70px;
+    height: 2px;
+    margin: 0 auto 1rem;
+    background: #c4a260;
+  }
+
+  .float-slow { animation: floaty 6s ease-in-out infinite; }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .theme-toggle {
+    width: 52px; height: 28px; border-radius: 999px;
+    position: relative; cursor: pointer;
+    background: #d8bd8a;
+    transition: background 0.3s ease;
+  }
+  html.dark .theme-toggle { background: #4a4238; }
+  .theme-toggle .knob {
+    position: absolute; top: 3px; left: 3px;
+    width: 22px; height: 22px; border-radius: 999px;
+    background: #fff;
+    transition: transform 0.3s ease;
+  }
+  html.dark .theme-toggle .knob { transform: translateX(24px); }
+
+  .skip-link {
+    position: absolute; left: -9999px; top: 0;
+    background: #c4a260; color: #17150f; padding: 0.75rem 1.25rem;
+    z-index: 100; border-radius: 0 0 0.5rem 0.5rem;
+  }
+  .skip-link:focus { left: 0; }
+
+  ::selection { background: #c4a260; color: #17150f; }
+
+  .modal-backdrop {
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .ab-tab {
+    border: 1px solid rgba(196,162,96,0.35);
+    background: transparent;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .ab-tab[aria-selected="true"] {
+    background: linear-gradient(135deg, #c4a260, #a3814a);
+    color: #17150f;
+    border-color: transparent;
+    font-weight: 700;
+  }
+  .ab-pane[hidden] { display: none; }
+  .ab-slot audio {
+    width: 100%;
+    height: 40px;
+    border-radius: 999px;
+    outline-offset: 3px;
+  }
+  html.dark .ab-slot audio { filter: invert(0.92) hue-rotate(180deg); }
+  .ab-after {
+    box-shadow: 0 0 0 1px rgba(196,162,96,0.45), 0 10px 30px rgba(196,162,96,0.18);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+<noscript>
+  <!-- بعض المنصات تجرّد السكربتات (منها صفحات Gumroad المخصّصة). بلا JS تبقى
+       عناصر .fade-up شفافة، فهذا الاحتياط يُظهرها ويطوي تبويب الصوت الثاني. -->
+  <style>
+    .fade-up { opacity: 1 !important; transform: none !important; }
+    .ab-tab { display: none !important; }
+    .ab-pane[hidden] { display: block !important; }
+  </style>
+</noscript>
+</head>
+<body class="antialiased">
+
+<a href="#main" class="skip-link">تخطَّ إلى المحتوى الرئيسي</a>
+
+<!-- NAV -->
+<nav class="fixed top-0 inset-x-0 z-40 backdrop-blur-md bg-[#faf7f2]/80 dark:bg-[#17150f]/80 border-b border-gold/20" role="navigation" aria-label="التنقل الرئيسي">
+  <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-2 font-bold text-lg text-gold-dark dark:text-gold">
+      <span aria-hidden="true">◈</span>
+      <span data-gumroad-field="name"><bdi>Diwān Voice Kit</bdi></span>
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="#details" class="hidden sm:inline text-sm hover:text-gold-dark dark:hover:text-gold transition-colors">التفاصيل</a>
+      <a href="#faq" class="hidden sm:inline text-sm hover:text-gold-dark dark:hover:text-gold transition-colors">الأسئلة</a>
+      <button id="theme-switch" class="theme-toggle" role="switch" aria-checked="false" aria-label="التبديل بين الوضع الفاتح والداكن">
+        <span class="knob"></span>
+      </button>
+      <a data-gumroad-action="buy" href="https://abdulmalik86.gumroad.com/l/DiwanVoiceKit" class="buy-btn hidden sm:inline-block text-ink font-bold text-sm px-5 py-2.5 rounded-full">اشترِ الآن</a>
+    </div>
+  </div>
+</nav>
+
+<main id="main">
+
+  <!-- HERO -->
+  <section class="relative pt-32 pb-20 px-5 sm:px-8 overflow-hidden">
+    <div class="absolute inset-0 -z-10 opacity-40 dark:opacity-30" aria-hidden="true"
+         style="background: radial-gradient(circle at 50% 0%, rgba(196,162,96,0.25), transparent 60%);"></div>
+
+    <div class="max-w-4xl mx-auto text-center">
+      <p class="fade-up inline-block text-xs sm:text-sm tracking-widest text-gold-dark dark:text-gold font-bold mb-6 border border-gold/40 rounded-full px-4 py-1.5">
+        عُدّة تحويل النصوص العربية إلى صوت — نحو وصرف وذكاء اصطناعي
+      </p>
+
+      <h1 class="fade-up glow-title text-4xl sm:text-6xl font-bold leading-tight mb-6">
+        هل جرّبت أن يقرأ الذكاء الاصطناعي<br class="hidden sm:block" />
+        نصك العربي… فخرج النطق <span class="text-gold-dark dark:text-gold">ركيكًا ملحونًا؟</span>
+      </h1>
+
+      <p class="fade-up text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-10 opacity-90">
+        المشكلة ليست في صوت <strong><bdi>ElevenLabs</bdi></strong> ولا في موسيقى <strong><bdi>Suno</bdi></strong> —
+        المشكلة أن النص العربي غير المشكول يجبر المحرك على التخمين.
+        <strong class="text-gold-dark dark:text-gold">«ديوان» يحل المشكلة من جذرها اللغوي.</strong>
+      </p>
+
+      <div class="fade-up flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a data-gumroad-action="buy" href="https://abdulmalik86.gumroad.com/l/DiwanVoiceKit"
+           class="buy-btn text-ink font-bold text-lg px-10 py-4 rounded-full inline-flex items-center gap-2">
+          <span>اشترِ الآن — </span>
+          <span data-gumroad-field="price"><bdi>$19</bdi></span>
+        </a>
+        <a href="#details" class="text-sm font-medium underline decoration-gold decoration-2 underline-offset-4 hover:text-gold-dark dark:hover:text-gold transition-colors">
+          شاهد ماذا بداخل الحزمة ↓
+        </a>
+      </div>
+
+      <p class="fade-up mt-6 text-sm opacity-70">ضمان استرداد كامل خلال 7 أيام · لا اشتراكات إضافية</p>
+    </div>
+
+    <!-- ══ اسمع الفرق: قبل/بعد ══ -->
+    <div class="fade-up mt-16 max-w-3xl mx-auto">
+      <div class="card rounded-3xl p-6 sm:p-8">
+
+        <div class="text-center mb-6">
+          <h2 class="text-2xl sm:text-3xl font-bold mb-2">
+            لا تصدّقنا — <span class="text-gold-dark dark:text-gold">اسمع الفرق</span>
+          </h2>
+          <p class="text-sm opacity-75 max-w-lg mx-auto leading-relaxed">
+            نفس النص حرفيًا في المقطعين. الفرق الوحيد أنّ أحدهما مرّ على «ديوان».
+          </p>
+        </div>
+
+        <div class="flex justify-center gap-2 mb-7" role="tablist" aria-label="اختر نوع العينة الصوتية">
+          <button class="ab-tab rounded-full px-5 py-2 text-sm" role="tab" id="tab-suno"
+                  aria-controls="pane-suno" aria-selected="true">🎵 قصيدة ← أغنية</button>
+          <button class="ab-tab rounded-full px-5 py-2 text-sm" role="tab" id="tab-tts"
+                  aria-controls="pane-tts" aria-selected="false">📖 نص ← قراءة</button>
+        </div>
+
+        <div class="ab-pane" id="pane-suno" role="tabpanel" aria-labelledby="tab-suno">
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="ab-slot rounded-2xl p-5 border border-gold/20 bg-black/[0.03] dark:bg-white/[0.03]">
+              <p class="text-sm font-bold mb-1 opacity-60">قبل — نص خام في <bdi>Suno</bdi></p>
+              <p class="text-xs opacity-60 mb-3 leading-relaxed">بلا تشكيل غنائي ولا تقسيم <bdi>Verse/Chorus</bdi> ولا <bdi>Style Prompt</bdi></p>
+              <audio controls preload="none" src="marketing-assets/suno-before-raw.mp3" data-src="suno-before-raw.mp3" aria-label="عينة صوتية: قصيدة قبل معالجة ديوان"></audio>
+            </div>
+            <div class="ab-slot ab-after rounded-2xl p-5 border border-gold/40 bg-gold/[0.06]">
+              <p class="text-sm font-bold mb-1 text-gold-dark dark:text-gold">بعد — مخرَج «ديوان»</p>
+              <p class="text-xs opacity-70 mb-3 leading-relaxed">تشكيل يحفظ الوزن، مقام الراست، لازمة مختارة، و<bdi>Style Prompt</bdi> مصمَّم</p>
+              <audio controls preload="none" src="marketing-assets/suno-after-diwan.mp3" data-src="suno-after-diwan.mp3" aria-label="عينة صوتية: القصيدة نفسها بعد معالجة ديوان"></audio>
+            </div>
+          </div>
+        </div>
+
+        <div class="ab-pane" id="pane-tts" role="tabpanel" aria-labelledby="tab-tts" hidden>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="ab-slot rounded-2xl p-5 border border-gold/20 bg-black/[0.03] dark:bg-white/[0.03]">
+              <p class="text-sm font-bold mb-1 opacity-60">قبل — نص خام في <bdi>ElevenLabs</bdi></p>
+              <p class="text-xs opacity-60 mb-3 leading-relaxed">بلا تشكيل — فيخمّن المحرك الحركات ويقلب المعنى</p>
+              <audio controls preload="none" src="marketing-assets/tts-before-raw.mp3" data-src="tts-before-raw.mp3" aria-label="عينة صوتية: نص قبل معالجة ديوان"></audio>
+            </div>
+            <div class="ab-slot ab-after rounded-2xl p-5 border border-gold/40 bg-gold/[0.06]">
+              <p class="text-sm font-bold mb-1 text-gold-dark dark:text-gold">بعد — مخرَج «ديوان»</p>
+              <p class="text-xs opacity-70 mb-3 leading-relaxed">نفس الكلمات حرفيًا — تشكيل كامل وأحكام وقف فقط</p>
+              <audio controls preload="none" src="marketing-assets/tts-after-diwan.mp3" data-src="tts-after-diwan.mp3" aria-label="عينة صوتية: النص نفسه بعد معالجة ديوان"></audio>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-center text-xs opacity-55 mt-5 leading-relaxed">
+          عيّنتا <bdi>ElevenLabs</bdi> بنفس الكلمات حرفيًا — الفرق تشكيل ووقف لا اختيار ألفاظ.
+        </p>
+      </div>
+    </div>
+
+    <!-- Cover carousel -->
+    <div class="fade-up mt-16 max-w-3xl mx-auto">
+      <div class="cover-carousel flex gap-4 overflow-x-auto pb-4 px-2" role="region" aria-label="معرض صور المنتج" tabindex="0">
+        <img src="https://public-files.gumroad.com/vemv15zv01tdj9uckhflcaarensp" alt="واجهة استوديو ديوان لتحليل القصيدة" class="w-[85%] sm:w-[70%] flex-shrink-0 rounded-2xl shadow-2xl border border-gold/30" loading="lazy" width="1600" height="1100" />
+        <img src="https://public-files.gumroad.com/ejy3xmfrxv9ssxe4y8u6d71behhz" alt="عرض تعليمات المنصة" class="w-[85%] sm:w-[70%] flex-shrink-0 rounded-2xl shadow-2xl border border-gold/30" loading="lazy" width="1600" height="620" />
+        <img src="https://public-files.gumroad.com/qm2qchh6u0i5sudqdjha75m7mvaf" alt="محرك التحقق العروضي" class="w-[85%] sm:w-[70%] flex-shrink-0 rounded-2xl shadow-2xl border border-gold/30" loading="lazy" width="1600" height="1000" />
+        <img src="https://public-files.gumroad.com/f75ipcy3z1sxwmpui69hpm81yqnr" alt="مكتبة أنماط الموسيقى" class="w-[85%] sm:w-[70%] flex-shrink-0 rounded-2xl shadow-2xl border border-gold/30" loading="lazy" width="1600" height="1000" />
+        <img src="https://public-files.gumroad.com/f4uyav7smpb1btiylmdx1dsdxtjw" alt="شعار ديوان" class="w-[85%] sm:w-[70%] flex-shrink-0 rounded-2xl shadow-2xl border border-gold/30" loading="lazy" width="1600" height="900" />
+      </div>
+      <p class="text-center text-xs opacity-60 mt-2">مرّر يمينًا/يسارًا لعرض لقطات الأداة</p>
+    </div>
+  </section>
+
+  <!-- THREE PATHS -->
+  <section id="details" class="py-20 px-5 sm:px-8 border-t border-gold/20">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14 fade-up">
+        <div class="divider-orn"></div>
+        <h2 class="text-3xl sm:text-4xl font-bold mb-3">ثلاثة تحويلات، محرك لغوي واحد</h2>
+        <p class="opacity-80 max-w-xl mx-auto">أيًا كان نصك، «ديوان» يجهزه ليخرج صوتيًا بلا تخمينٍ في التشكيل ولا لحنٍ في النطق</p>
+      </div>
+
+      <div class="grid sm:grid-cols-3 gap-6">
+        <div class="fade-up card rounded-2xl p-7 text-center">
+          <div class="text-4xl mb-4" aria-hidden="true">🎵</div>
+          <h3 class="font-bold text-lg mb-2">قصيدة ← أغنية</h3>
+          <p class="text-sm opacity-80 leading-relaxed">تشكيل كامل يحفظ الوزن، واقتراح مقامٍ وإيقاع بسندٍ عروضي، وثلاثة اقتراحات ستايل موسيقي جاهزة لـ <bdi>Suno</bdi>.</p>
+        </div>
+        <div class="fade-up card rounded-2xl p-7 text-center" style="transition-delay:100ms">
+          <div class="text-4xl mb-4" aria-hidden="true">📖</div>
+          <h3 class="font-bold text-lg mb-2">مقال ← قراءة</h3>
+          <p class="text-sm opacity-80 leading-relaxed">تطبيع النص وضبط النطق ووحدات التنفس، جاهز مباشرة لمحركات مثل <bdi>ElevenLabs</bdi>.</p>
+        </div>
+        <div class="fade-up card rounded-2xl p-7 text-center" style="transition-delay:200ms">
+          <div class="text-4xl mb-4" aria-hidden="true">🎬</div>
+          <h3 class="font-bold text-lg mb-2">نص تأملي ← سرد سينمائي</h3>
+          <p class="text-sm opacity-80 leading-relaxed">وقفات وأحكام وصل مبنية على النحو والصرف، لا على تخمين النموذج.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VERIFIED NOT VIBES -->
+  <section class="py-20 px-5 sm:px-8 border-t border-gold/20 bg-white/40 dark:bg-black/20">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="fade-up divider-orn"></div>
+      <h2 class="fade-up text-3xl sm:text-4xl font-bold mb-5">لا نطلب منك الثقة العمياء</h2>
+      <p class="fade-up text-lg leading-relaxed opacity-90 mb-8">
+        بداخل الحزمة <strong class="text-gold-dark dark:text-gold">محرك تقطيع عروضي خوارزمي مستقل</strong> —
+        يقطّع البيت بنفسه ويكشف المواضع التي تستحق مراجعتك، بدل أن يترك النموذج يقيّم عمله بنفسه.
+        وهو <strong>كاشفٌ لا حَكَم</strong>: تشغيله على كوربوس مرجعي مرفق يعطي ٧٥٪ في تسمية البحر
+        و٣/٣ في رفض النثر — رقمٌ نعلنه كما هو، ويمكنك إعادة إنتاجه بأمرٍ واحد على جهازك.
+      </p>
+      <div class="fade-up inline-flex flex-wrap justify-center gap-3 text-sm">
+        <span class="card rounded-full px-4 py-2">✓ تشكيل كامل بالحركات</span>
+        <span class="card rounded-full px-4 py-2">✓ أحكام الوقف والوصل</span>
+        <span class="card rounded-full px-4 py-2">✓ كشف عروضي مستقل (٧٥٪ معلنة)</span>
+        <span class="card rounded-full px-4 py-2">✓ متوافق مع <bdi>Suno</bdi> و<bdi>ElevenLabs</bdi></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT'S INSIDE -->
+  <section class="py-20 px-5 sm:px-8 border-t border-gold/20">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12 fade-up">
+        <div class="divider-orn"></div>
+        <h2 class="text-3xl sm:text-4xl font-bold">ماذا يوجد في الحزمة؟</h2>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-5">
+        <div class="fade-up card rounded-2xl p-6 flex gap-4 items-start">
+          <span class="text-gold-dark dark:text-gold text-xl" aria-hidden="true">✦</span>
+          <div>
+            <h3 class="font-bold mb-1">تعليمات جاهزة لكل منصة</h3>
+            <p class="text-sm opacity-80">ملف واحد يُلصق مباشرة — يعمل مع <bdi>Claude</bdi>، و<bdi>ChatGPT/Codex</bdi>، و<bdi>Gemini</bdi>.</p>
+          </div>
+        </div>
+        <div class="fade-up card rounded-2xl p-6 flex gap-4 items-start" style="transition-delay:80ms">
+          <span class="text-gold-dark dark:text-gold text-xl" aria-hidden="true">✦</span>
+          <div>
+            <h3 class="font-bold mb-1">أداة استوديو تفاعلية</h3>
+            <p class="text-sm opacity-80">صفحة <bdi>HTML</bdi> واحدة لتحليل القصيدة وضبطها بصريًا قبل التصدير.</p>
+          </div>
+        </div>
+        <div class="fade-up card rounded-2xl p-6 flex gap-4 items-start" style="transition-delay:160ms">
+          <span class="text-gold-dark dark:text-gold text-xl" aria-hidden="true">✦</span>
+          <div>
+            <h3 class="font-bold mb-1">مرجع المقامات والعُرَب</h3>
+            <p class="text-sm opacity-80">دليل عملي لاختيار المقام والإيقاع المناسبين لكل قصيدة.</p>
+          </div>
+        </div>
+        <div class="fade-up card rounded-2xl p-6 flex gap-4 items-start" style="transition-delay:240ms">
+          <span class="text-gold-dark dark:text-gold text-xl" aria-hidden="true">✦</span>
+          <div>
+            <h3 class="font-bold mb-1">أمثلة وخطوط أنابيب كاملة</h3>
+            <p class="text-sm opacity-80">قصيدة→أغنية، مقال→سرد، نص تأملي→سينمائي — كل مسار بأمثلة حقيقية.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO ITS FOR -->
+  <section class="py-20 px-5 sm:px-8 border-t border-gold/20 bg-white/40 dark:bg-black/20">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="fade-up divider-orn"></div>
+      <h2 class="fade-up text-3xl sm:text-4xl font-bold mb-6">لمن هذه العُدّة؟</h2>
+      <p class="fade-up text-lg leading-relaxed opacity-90">
+        للشعراء الذين يريدون سماع قصائدهم مغناة، وصنّاع المحتوى الذين يحوّلون مقالاتهم إلى بودكاست،
+        وأي شخص يستخدم <bdi>Suno</bdi> أو <bdi>ElevenLabs</bdi> ويريد نطقًا عربيًا سليمًا —
+        <strong class="text-gold-dark dark:text-gold">بلا اشتراكات جديدة</strong>، تعمل مع نموذج الذكاء الاصطناعي الذي تملكه أصلًا.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-20 px-5 sm:px-8 border-t border-gold/20">
+    <div class="max-w-2xl mx-auto">
+      <div class="text-center mb-10 fade-up">
+        <div class="divider-orn"></div>
+        <h2 class="text-3xl sm:text-4xl font-bold">أسئلة شائعة</h2>
+      </div>
+
+      <div class="space-y-3" id="faq-list">
+        <div class="fade-up card rounded-xl overflow-hidden">
+          <button class="faq-trigger w-full text-right px-5 py-4 flex justify-between items-center gap-3 font-bold" aria-expanded="false">
+            <span>هل أحتاج اشتراكًا إضافيًا في أداة ذكاء اصطناعي؟</span>
+            <span class="faq-icon text-gold-dark dark:text-gold transition-transform" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-panel px-5 overflow-hidden transition-all duration-300" style="max-height:0">
+            <p class="pb-4 text-sm opacity-80 leading-relaxed">لا. الحزمة تعمل مع أي نموذج تملكه بالفعل — <bdi>Claude</bdi> أو <bdi>ChatGPT/Codex</bdi> أو <bdi>Gemini</bdi> — بلا رسوم اشتراك إضافية من طرفنا.</p>
+          </div>
+        </div>
+
+        <div class="fade-up card rounded-xl overflow-hidden">
+          <button class="faq-trigger w-full text-right px-5 py-4 flex justify-between items-center gap-3 font-bold" aria-expanded="false">
+            <span>هل يضمن «ديوان» صحة الوزن العروضي؟</span>
+            <span class="faq-icon text-gold-dark dark:text-gold transition-transform" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-panel px-5 overflow-hidden transition-all duration-300" style="max-height:0">
+            <p class="pb-4 text-sm opacity-80 leading-relaxed">لا — ولا ندّعيه. الحَكَم في الوزن أذنك وسليقتك. ما نقدّمه محرك تقطيع خوارزمي <strong>مستقل عن النموذج</strong> يقطّع البيت بنفسه ويشير إلى ما يستحق مراجعتك؛ دقّته المعلَنة ٧٥٪ في تسمية البحر على كوربوس مرجعي مرفق بالحزمة (و٣/٣ في رفض النثر)، وتستطيع إعادة إنتاج الرقم بنفسك بأمرٍ واحد. فائدته أنه يمنع النموذج من تقييم عمله بنفسه، لا أنه يوقّع لك على صحة البيت.</p>
+          </div>
+        </div>
+
+        <div class="fade-up card rounded-xl overflow-hidden">
+          <button class="faq-trigger w-full text-right px-5 py-4 flex justify-between items-center gap-3 font-bold" aria-expanded="false">
+            <span>هل يعمل مع نصوص غير الشعر أيضًا؟</span>
+            <span class="faq-icon text-gold-dark dark:text-gold transition-transform" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-panel px-5 overflow-hidden transition-all duration-300" style="max-height:0">
+            <p class="pb-4 text-sm opacity-80 leading-relaxed">نعم — المقالات والنصوص التأملية والسرد السينمائي مسارات مدعومة بالكامل، ولكل منها دليل وأمثلة خاصة.</p>
+          </div>
+        </div>
+
+        <div class="fade-up card rounded-xl overflow-hidden">
+          <button class="faq-trigger w-full text-right px-5 py-4 flex justify-between items-center gap-3 font-bold" aria-expanded="false">
+            <span>ماذا لو لم يناسبني المنتج؟</span>
+            <span class="faq-icon text-gold-dark dark:text-gold transition-transform" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-panel px-5 overflow-hidden transition-all duration-300" style="max-height:0">
+            <p class="pb-4 text-sm opacity-80 leading-relaxed">استرداد كامل خلال 7 أيام من الشراء، بلا أسئلة.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="py-24 px-5 sm:px-8 border-t border-gold/20 relative overflow-hidden">
+    <div class="absolute inset-0 -z-10 opacity-30" aria-hidden="true"
+         style="background: radial-gradient(circle at 50% 50%, rgba(196,162,96,0.3), transparent 65%);"></div>
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="float-slow text-5xl mb-6" aria-hidden="true">◈</div>
+      <h2 class="fade-up text-3xl sm:text-5xl font-bold mb-5 glow-title">من القصيدة إلى الأغنية</h2>
+      <p class="fade-up text-lg opacity-90 mb-10" data-gumroad-field="description">
+        حوّل أي قصيدة عربية إلى أغنية جاهزة للإنتاج، بضبطٍ نحويٍّ وصرفيٍّ كامل وإيقاعٍ مقترَحٍ بسندٍ عروضي — في دقائق
+      </p>
+      <a data-gumroad-action="buy" href="https://abdulmalik86.gumroad.com/l/DiwanVoiceKit"
+         class="fade-up buy-btn text-ink font-bold text-xl px-12 py-5 rounded-full inline-flex items-center gap-2">
+        <span>اشترِ الآن — </span>
+        <span data-gumroad-field="price"><bdi>$19</bdi></span>
+      </a>
+      <p class="fade-up mt-5 text-sm opacity-70">ضمان استرداد كامل خلال 7 أيام</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="py-10 px-5 sm:px-8 border-t border-gold/20 text-center text-xs opacity-60">
+  <p data-gumroad-field="name"><bdi>Diwān Voice Kit</bdi></p>
+  <p class="mt-1">Powered by Gumroad</p>
+</footer>
+
+<script>
+  // إعداد الروابط والصوت من window.DIWAN (مكان واحد للتعديل)
+  (function() {
+    var cfg = window.DIWAN || {};
+    if (cfg.BUY_URL) {
+      document.querySelectorAll('[data-gumroad-action="buy"]').forEach(function(a) {
+        a.setAttribute('href', cfg.BUY_URL);
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener');
+      });
+    }
+    var base = cfg.AUDIO_BASE || '';
+    document.querySelectorAll('audio[data-src]').forEach(function(a) {
+      a.setAttribute('src', base + a.getAttribute('data-src'));
+    });
+  })();
+
+  // مقارنة قبل/بعد: تبويب + تشغيل واحد في كل مرة
+  (function() {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.ab-tab'));
+    var audios = Array.prototype.slice.call(document.querySelectorAll('.ab-slot audio'));
+    if (!tabs.length) return;
+
+    function select(tab) {
+      tabs.forEach(function(t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+      audios.forEach(function(a) { a.pause(); });
+    }
+    tabs.forEach(function(t) {
+      t.addEventListener('click', function() { select(t); });
+      t.addEventListener('keydown', function(e) {
+        var i = tabs.indexOf(t);
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          var next = tabs[(i + 1) % tabs.length];
+          select(next); next.focus();
+        }
+      });
+    });
+
+    // تشغيل مقطع يوقف ما سواه — المقارنة تكون بالتتابع لا بالتداخل
+    audios.forEach(function(a) {
+      a.addEventListener('play', function() {
+        audios.forEach(function(o) { if (o !== a) o.pause(); });
+      });
+    });
+  })();
+
+  // Fade-up on scroll
+  (function() {
+    var els = document.querySelectorAll('.fade-up');
+    if (!('IntersectionObserver' in window)) {
+      els.forEach(function(el){ el.classList.add('visible'); });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    els.forEach(function(el) { io.observe(el); });
+  })();
+
+  // Theme toggle (respects system preference, no persistence needed across loads)
+  (function() {
+    var root = document.documentElement;
+    var toggle = document.getElementById('theme-switch');
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    function setTheme(dark) {
+      root.classList.toggle('dark', dark);
+      toggle.setAttribute('aria-checked', dark ? 'true' : 'false');
+    }
+    setTheme(prefersDark);
+    toggle.addEventListener('click', function() {
+      setTheme(!root.classList.contains('dark'));
+    });
+  })();
+
+  // FAQ accordion
+  (function() {
+    var triggers = document.querySelectorAll('.faq-trigger');
+    triggers.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var panel = btn.nextElementSibling;
+        var icon = btn.querySelector('.faq-icon');
+        var isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+        // close all others
+        triggers.forEach(function(other) {
+          if (other !== btn) {
+            other.setAttribute('aria-expanded', 'false');
+            other.nextElementSibling.style.maxHeight = '0px';
+            other.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
+          }
+        });
+
+        if (isOpen) {
+          btn.setAttribute('aria-expanded', 'false');
+          panel.style.maxHeight = '0px';
+          icon.style.transform = 'rotate(0deg)';
+        } else {
+          btn.setAttribute('aria-expanded', 'true');
+          panel.style.maxHeight = panel.scrollHeight + 'px';
+          icon.style.transform = 'rotate(45deg)';
+        }
+      });
+    });
+  })();
+
+  // Keyboard-accessible carousel scroll with arrow keys
+  (function() {
+    var carousel = document.querySelector('.cover-carousel');
+    if (!carousel) return;
+    carousel.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') { carousel.scrollBy({left: -320, behavior: 'smooth'}); }
+      if (e.key === 'ArrowRight') { carousel.scrollBy({left: 320, behavior: 'smooth'}); }
+    });
+  })();
+</script>
+
+</body>
+</html>
